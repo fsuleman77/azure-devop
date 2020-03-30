@@ -1,0 +1,32 @@
+trigger:
+- master
+pool:
+  vmImage: 'Ubuntu-16.04'
+steps:
+- task: Docker@1
+  displayName: pull 
+  inputs:
+        command: pull
+        arguments: $(imageName) 
+- task: UniversalPackages@0
+  inputs:
+    command: 'download'
+    downloadDirectory: '$(System.DefaultWorkingDirectory)'
+    feedsToUse: 'internal'
+    vstsFeed: '310841e6-2503-435a-bb1b-a7f5c1272d5d/91392a09-abbc-4a2f-b1ca-5201ad52649d'
+    vstsFeedPackage: 'd2c30cb0-30f2-46b6-a566-cf61dc6bf1b0'
+    vstsPackageVersion: '0.0.1'
+- task: CmdLine@2
+  inputs:
+    script: |
+      sudo mv $(System.DefaultWorkingDirectory)/twistcli /usr/bin/twistcli
+      sudo chmod +x /usr/bin/twistcli
+- task: prisma-cloud-compute-scan@1
+  inputs:
+    scanType: 'images'
+    twistlockService: 'ac-pcc-scan'
+    vulnerabilityThreshold: 'critical'
+    onlyFixed: false
+    gracePeriod: '0'
+    complianceThreshold: 'critical'
+    artifact: '$(nvidia/cuda:9.2-runtime-ubuntu18.04)'
